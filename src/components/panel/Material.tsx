@@ -34,7 +34,7 @@ export function Material() {
 
                       <div className='card-item-wrapper card-file'>
                         <div className="image-wrapper">
-                          <img className="image" src="blob:https://www.capcut.cn/8dbfbb51-2383-4346-ba9e-b28441ec5df4" draggable="false" />
+                          <img className="image" src="https://lf3-effectcdn-tos.byteeffecttos.com/obj/ies.fe.effect//22539aef9d49d234c27e66b4a734bf88" draggable="true" />
                         </div>
                       </div>
 

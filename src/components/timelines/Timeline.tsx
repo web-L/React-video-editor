@@ -99,10 +99,16 @@ const useTrackList = (track: TimeLineTrack[] = []) => {
   const [trackList, setTrackList] = useState<TimeLineTrack[]>(track)
 
   function getSegment(id: string) {
-    let res: TimelineSegment | undefined;
     for (let i = 0; i < trackList.length; i++) {
-      res = trackList[i].segment.find(s => s.id === id)
-      if (res) return res;
+      for (let j = 0; j < trackList[i].segment.length; j++) {
+        if (trackList[i].segment[j].id === id) {
+          return {
+            prev: trackList[i].segment[j - 1],
+            segment: trackList[i].segment[j],
+            next: trackList[i].segment[j + 1]
+          }
+        }
+      }
     }
   }
 
@@ -263,16 +269,17 @@ export function Timeline() {
   function onSelectionDown(e: PointerEvent): void {
     const dataset = (e.target as HTMLDivElement).dataset;
     const action = dataset.action || '';
-    const segment = getSegment(dataset.id || '')
+    const getSegments = getSegment(dataset.id || '');
 
-    if (action === '' || !segment) return;
-
+    if (action === '' || !getSegments) return;
+    
+    const { segment, prev: prevS, next: nextS } = getSegments;
     const segBox = ((e.target as HTMLDivElement).parentNode as HTMLDivElement).getBoundingClientRect();
     updateSelectSegment({ id: dataset.id || '', drag: '' });
     updateTrackActive(dataset.trackid || '', true);
+
     sMpos.id = dataset.id || '';
     sMpos.action = action as 'drag' | 'edge-front' | 'edge-rear';
-    
     sMpos.point = [e.clientX, e.clientY - segBox.top]
     sMpos.box = { x: segBox.x, y: segBox.y, w: segBox.width, h: segBox.height, cx: segBox.width / 2, cy: segBox.height / 2 };
     sMpos.time = (e.pageX - timelineState.limitLeft) / timelineState.secondWidth + scrollToTime(-1);
@@ -297,7 +304,7 @@ export function Timeline() {
       case 'edge-front':
         {
           sMpos.eTime = segment.start;
-          sMpos.ml = 0;
+          sMpos.ml = prevS ? prevS.end : 0;
           sMpos.mr = Fix3(segment.end - Math.max(0.1, sMpos.midDur));
         }
         break
@@ -305,7 +312,7 @@ export function Timeline() {
         {
           sMpos.eTime = segment.end;
           sMpos.ml = segment.start + Math.max(0.1, sMpos.midDur);
-          sMpos.mr = -1;
+          sMpos.mr = nextS ? nextS.start : -1;
         }
         break
     }
@@ -396,6 +403,31 @@ export function Timeline() {
     updateSelectSegment({ id: sMpos.id, drag: ''});
     sMpos.action = '';
   }
+
+  /**
+ * 双指捏合缩放
+ */
+function wheelEvent(e: SyntheticEvent) {
+  if ((e as unknown as WheelEvent).ctrlKey) {
+    // e.preventDefault();
+    console.log('wheelEvent');
+    
+  //   // let val = secondWidth.value - e.deltaY;
+  //   // val = val < 20 ? 20 : val > 340 ? 340 : val;
+  //   // secondWidth.value = Math.round(val);
+  }
+}
+
+/**
+ * 滚动事件修改自定义滚动块
+ * @param e e
+ */
+function scrollEvent() {
+  console.log('scrollEvent');
+  // scrollLeft.value = ContentBody.value!.scrollLeft;
+  // handleXLeft.value =
+  //   (scrollLeft.value * visibleWidth.value) / scrollWidth.value;
+}
   
   return (
     <>
@@ -425,7 +457,7 @@ export function Timeline() {
 
         </div>
 
-        <div className="timeline-bd">
+        <div className="timeline-bd" onScroll={ scrollEvent } onWheel={ wheelEvent }>
 
           <div className='content-scroll-body' ref={ ContentBody } style={{ width: '1524.1px' }}>
 
