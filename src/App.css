@@ -1,0 +1,42 @@
+.layout-main {
+  height: 100vh;
+  min-height: 640px;
+  min-width: 1256px;
+  overflow: hidden;
+  width: 100vw;
+
+  --editor-cyan-0: #213539;
+  --editor-cyan-1: #004d52;
+  --editor-cyan-2: #00c1cd;
+  --editor-cyan-3: #1e4c51;
+  --editor-black-00: #000;
+  --editor-black-0: #070709;
+  --editor-black-0A: #070709e5;
+  --editor-black-0B: #121212;
+  --editor-black-2: #202023;
+  --editor-black-3: #252528;
+  --editor-black-4: #29292d;
+  --editor-black-5: #343337;
+  --editor-grey-0: #4c4c4c;
+  --editor-grey-1: #6c6c6c;
+  --editor-grey-2: grey;
+  --editor-grey-3: #999;
+  --editor-grey-4: #b2b2b2;
+  --editor-grey-5: #d4d4d4;
+  --editor-grey-6: #e5e5e5;
+  --editor-red-0: #450b0b;
+  --editor-red-1: #ae1c1c;
+  --editor-yellow-2: #cd9541;
+  --editor-yellow-3: #a58744;
+  --editor-white-0: #fafafa;
+  --editor-white-1A: #fafafa1f;
+  --editor-purple-0: #454386;
+  --editor-purple-1: #6e4d7f;
+  --editor-orange-0: #924d3c;
+  --editor-blue-0: #173055;
+  --editor-tl-seg-edge-handle: #0006;
+  --editor-tl-seg-fade: #202023b2;
+  --editor-tl-track-active: #f0f0ff0d;
+  --editor-tl-tool-btn-highlight: #00b6c2
+}
+

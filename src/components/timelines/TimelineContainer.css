@@ -1,0 +1,6 @@
+.timeline-container {
+  background-color: var(--color-bg-2);
+  height: 100%;
+  position: relative;
+  width: 100%
+}

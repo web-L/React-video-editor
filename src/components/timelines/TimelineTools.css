@@ -1,0 +1,13 @@
+.timeline-tools {
+  -moz-box-pack: start;
+  -moz-box-align: stretch;
+  -webkit-align-items: stretch;
+  align-items: stretch;
+  border-bottom: 2px solid var(--color-border-1);
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  height: 48px;
+  -webkit-justify-content: flex-start;
+  justify-content: flex-start;
+  padding: 12px
+}

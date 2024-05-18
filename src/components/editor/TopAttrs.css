@@ -1,0 +1,28 @@
+.layout-main .arco-resizebox {
+  overflow: visible;
+}
+
+.editor-container .editor-content-top-attrs {
+  min-width: 322px;
+  width: 322px;
+  position: relative;
+}
+
+.sider-attribute {
+  height: 100%;
+  position: relative;
+  user-select: none;
+  position: relative;
+}
+
+.sider-attribute .sider-attribute-tabs {
+  background-color: var(--color-bg-2);
+  height: 100%;
+}
+
+.arco-tabs, .arco-tabs-header-nav {
+  position: relative;
+}
+.arco-tabs {
+  overflow: hidden;
+}

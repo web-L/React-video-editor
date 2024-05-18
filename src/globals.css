@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+    --color-white: hsla(0,0%,100%,.9);
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+
+    --color-black: #000;
+    --color-border: #333335;
+    --color-bg-1: #121212;
+    --color-bg-2: #202023;
+    --color-bg-3: rgba(48,48,51,.98);
+    --color-bg-4: rgba(240,245,255,.06);
+    --color-bg-5: rgba(240,245,255,.03);
+    --color-bg-white: #fff;
+    --color-text-1: hsla(0,0%,100%,.6);
+    --color-text-2: hsla(0,0%,100%,.4);
+    --color-text-3: hsla(0,0%,100%,.2);
+    --color-text-4: #00c1cd;
+    --color-fill-1: hsla(0,0%,100%,.8);
+    --color-fill-2: hsla(0,0%,100%,.4);
+    --color-fill-3: hsla(0,0%,100%,.14);
+    --color-fill-4: rgba(240,240,255,.11);
+    --color-border-1: hsla(0,0%,100%,.06);
+    --color-border-2: hsla(0,0%,100%,.2);
+    --color-border-3: hsla(0,0%,100%,.4);
+    --color-border-4: #00c1cd;
+    --color-primary-light-1: rgba(var(--primary-6),.2);
+    --color-primary-light-2: rgba(var(--primary-6),.35);
+    --color-primary-light-3: rgba(var(--primary-6),.5);
+    --color-primary-light-4: rgba(var(--primary-6),.65);
+    --color-secondary: rgba(var(--gray-9),.08);
+    --color-secondary-hover: rgba(var(--gray-8),.16);
+    --color-secondary-active: rgba(var(--gray-7),.24);
+    --color-secondary-disabled: rgba(var(--gray-9),.08);
+    --color-danger-light-1: rgba(var(--danger-6),.2);
+    --color-danger-light-2: rgba(var(--danger-6),.35);
+    --color-danger-light-3: rgba(var(--danger-6),.5);
+    --color-danger-light-4: rgba(var(--danger-6),.65);
+    --color-success-light-1: rgb(var(--success-6),.2);
+    --color-success-light-2: rgb(var(--success-6),.35);
+    --color-success-light-3: rgb(var(--success-6),.5);
+    --color-success-light-4: rgb(var(--success-6),.65);
+    --color-warning-light-1: rgb(var(--warning-6),.2);
+    --color-warning-light-2: rgb(var(--warning-6),.35);
+    --color-warning-light-3: rgb(var(--warning-6),.5);
+    --color-warning-light-4: rgb(var(--warning-6),.65);
+    --color-link-light-1: rgba(var(--link-6),.2);
+    --color-link-light-2: rgba(var(--link-6),.35);
+    --color-link-light-3: rgba(var(--link-6),.5);
+    --color-link-light-4: rgba(var(--link-6),.65);
+    --color-tooltip-bg: #373739;
+    --color-spin-layer-bg: rgba(51,51,51,.6);
+    --color-menu-dark-bg: #232324;
+    --color-menu-light-bg: #232324;
+    --color-menu-dark-hover: var(--color-fill-2);
+    --color-mask-bg: rgba(23,23,26,.6);
+    --color-text-dark: #000;
+    --color-text-red: #fe2c55;
+    --color-text-3-dark: hsla(0,0%,100%,.2);
+    --color-text-0: #fff;
+    --color-fill-5: #484952;
+    --color-fill-6: rgba(0,0,0,.3);
+    --color-fill-7: rgba(0,0,0,.7);
+    --color-fill-video: #014a51;
+    --color-fill-audio: #0e3058;
+    --color-fill-text: #9c4937;
+    --color-fill-effects: #2e5297;
+    --color-fill-filter: #47418b;
+    --color-fill-textselection: rgba(0,182,194,.3);
+    --color-fill-red: #e95052;
+    --color-fill-orange: #ff6b18;
+    --color-fill-sticker: #f08a34;
+    --color-fill-8: rgba(0,0,0,.8);
+    --color-fill-9: #3e3e42;
+    --color-fill-10: #323236;
+    --color-fill-tooltip: rgba(48,48,51,.99);
+    --color-fill-4-dark: rgba(240,240,255,.1);
+    --color-fill-red-dark: #e95052;
+    --color-fill-3-dark: hsla(0,0%,100%,.14);
+    --color-fill-0: #fff;
+    --color-border-5: #fe2c55;
+    --color-border-1-dark: hsla(0,0%,100%,.06);
+    --color-border-2-dark: hsla(0,0%,100%,.2);
+    --color-bg-black: #000;
+    --color-bg-3-dark: rgba(48,48,51,.98);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+

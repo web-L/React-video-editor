@@ -1,0 +1,62 @@
+.editor-container {
+    display: -webkit-flex;
+    display: -moz-box;
+    display: flex;
+    height: 100%;
+    min-height: 592px;
+    min-width: 1256px;
+    overflow: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    width: 100%
+}
+
+.editor-container .editor-content {
+  flex: 1 1;
+  min-width: 0
+}
+.editor-content-resize-box>.second-pane {
+  min-height: 220px
+}
+
+.editor-content-resize-box>.first-pane {
+  min-height: 320px;
+}
+
+.arco-resizebox-split,.arco-resizebox-split-group {
+  display: -webkit-flex;
+  display: -moz-box;
+  display: flex;
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
+  user-select: auto
+}
+
+.arco-layout {
+  -moz-box-flex: 1;
+  -moz-box-orient: vertical;
+  -moz-box-direction: normal;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: flex;
+  flex: 1 1;
+  flex-direction: column;
+  margin: 0;
+  padding: 0
+}
+
+.arco-resizebox-split-vertical {
+  flex-direction: column
+}
+
+.arco-resizebox-trigger.arco-resizebox-trigger-horizontal {
+  height: 2px!important;
+  position: relative;
+}
+.arco-resizebox-trigger-horizontal {
+  cursor: row-resize;
+  width: 100%;
+}

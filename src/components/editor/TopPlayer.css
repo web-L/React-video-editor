@@ -1,0 +1,19 @@
+.player {
+  -moz-box-orient: vertical;
+  -moz-box-direction: normal;
+  background-color: var(--color-bg-2);
+  display: -webkit-flex;
+  display: -moz-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  user-select: none
+}
+
+.editor-container .editor-content-top-player {
+  -moz-box-flex: 1;
+  -webkit-flex: 1 1;
+  flex: 1 1;
+  min-width: 500px;
+}

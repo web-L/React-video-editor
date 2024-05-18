@@ -1,0 +1,54 @@
+.arco-layout-header.top-nav {
+  background-color: var(--color-bg-2);
+  height: 48px;
+  justify-content: center;
+  margin-bottom: 2px;
+  min-width: 1256px;
+  position: relative;
+  align-items: center;
+  display: flex;
+}
+
+.logo {
+  left: 20px;
+  position: absolute;
+}
+
+.arco-layout-header.top-nav .draft-input{
+  background-color: transparent;
+  border-radius: 2px;
+  color: var(--color-white);
+  display: inline-block;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 22px;
+  padding: 4px 8px;
+  text-align: center;
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  user-select: all;
+  width: 400px;
+}
+
+.arco-input {
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: var(--color-fill-6);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  color: var(--color-text-0);
+  font-size: 14px;
+  line-height: 1.5715;
+  outline: none;
+  padding: 8px 12px;
+  -webkit-transition: color .1s linear,border-color .1s linear,background-color .1s linear;
+  -o-transition: color .1s linear,border-color .1s linear,background-color .1s linear;
+  -moz-transition: color .1s linear,border-color .1s linear,background-color .1s linear;
+  transition: color .1s linear,border-color .1s linear,background-color .1s linear;
+  width: 100%;
+}

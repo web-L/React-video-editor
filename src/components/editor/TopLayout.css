@@ -1,0 +1,15 @@
+.editor-content-resize-box>.first-pane {
+  min-height: 320px
+}
+
+.editor-container .editor-content-top {
+  display: flex;
+  height: 100%;
+}
+
+.editor-container .editor-content-top-player {
+  -moz-box-flex: 1;
+  -webkit-flex: 1 1;
+  flex: 1 1;
+  min-width: 500px;
+}
