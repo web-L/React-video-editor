@@ -1,152 +1,41 @@
-import ReactDOM from 'react-dom';
-import './Timeline.css';
-import { TimelineAxios } from './TimelineAxios'
-import { SyntheticEvent, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { SyntheticEvent, useEffect, useRef, useState } from 'react';
+import './Timeline.css';
+import { TrackType } from './type';
+import { TimelineAxios } from './TimelineAxios'
+import { useTimelineState, LeftGap, useTrackList, RightHide} from './TimelineHooks';
+import { TimelineDragTrackComponent } from './TimelineDragTrack';
+import { SegmentComponent } from './TimelineSegment';
 
-enum TrackType {
-  text = 1,
-  img = 2,
-  audio = 3,
-  video = 4,
-}
-// 左则头
-const LeftWidth = 80;
-// 左边素材边栏
-const MaterialWidth = 388;
-// 时间轴左则空隙
-const LeftGap = 16;
 
 const Fix3 = (x: number) => Math.round(x * 1000) / 1000;
 const Fix1 = (x: number) => Math.round(x * 10) / 10;
 
-type TimelineSegment = {
-  id: string;
-  type: TrackType;
-  start: number;
-  end: number;
-  dur: number;
-  source: {
-    title: string;
-    url?: string;
-    content?: string;
-  };
+/** 计算元素重叠率 */
+function calculateOverlapRatio(rect1: DOMRect, rect2: DOMRect) {
+  const overlap = !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
+  let overlapArea = 0;
+  // 计算重叠部分的面积
+  if (overlap) {
+    const overlapWidth = Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left);
+    const overlapHeight = Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top);
+    overlapArea = overlapWidth * overlapHeight;
+  } else {
+    overlapArea = 0;
+  }
+
+  // 计算总面积
+  const totalArea = rect1.width * rect1.height + rect2.width * rect2.height;
+
+  // 计算重叠占比
+  const overlapRatio = overlapArea / totalArea;
+
+  return overlapRatio;
 }
-type TimeLineTrack = { 
-  id: string;
-  active: boolean;
-  type: TrackType;
-  segment: TimelineSegment[]
-}
-/**
- * 用于计算的元素盒子数据
- * @property w 宽
- * @property h 高
- * @property x left
- * @property y top
- * @property r 旋转
- * @property cx 中心点x
- * @property cy 中心点y
- */
-export type BBox = {
-  w: number;
-  h: number;
-  x: number;
-  y: number;
-  cx: number;
-  cy: number;
-};
-
-
-const useTimelineState = () => {
-  const [timelineState, setTimelineState] = useState<{ 
-    totalTime: number;
-    secondWidth: number;
-    /** 当前时间 */
-    nowTime: number;
-    /**  滚动元素的右边位置 */
-    limitLeft: number;
-    /** 滚动值 */
-    scrollLeft: number;
-    /** 可以滚动内容的宽度 */
-    visibleWidth: number;
-    /** 拖拽容器 */
-    dragTrackWrap: { active: boolean, x: number, y: number }
-   }>({
-    nowTime: 1,
-    totalTime: 10,
-    secondWidth: 120,
-    limitLeft: LeftWidth + MaterialWidth + LeftGap,
-    scrollLeft: 0,
-    visibleWidth: 700,
-    dragTrackWrap: { active: false, x: 0, y: 0 }
-  });
-
-  const updateTimelineState = (state: Partial<typeof timelineState> ) => {
-    setTimelineState({
-      ...timelineState,
-      ...state
-    })
-  }
-
-  return {
-    timelineState,
-    updateTimelineState
-  }
-};
-
-const useTrackList = (track: TimeLineTrack[] = []) => {
-  const [trackList, setTrackList] = useState<TimeLineTrack[]>(track)
-
-  function getSegment(id: string) {
-    for (let i = 0; i < trackList.length; i++) {
-      for (let j = 0; j < trackList[i].segment.length; j++) {
-        if (trackList[i].segment[j].id === id) {
-          return {
-            prev: trackList[i].segment[j - 1],
-            segment: trackList[i].segment[j],
-            next: trackList[i].segment[j + 1]
-          }
-        }
-      }
-    }
-  }
-
-  function updateSegment(id: string, segment: Partial<TimelineSegment>) {
-    for (let i = 0; i < trackList.length; i++) {
-      for (let j = 0; j < trackList[i].segment.length; j++) {
-        if (trackList[i].segment[j].id === id) {
-          trackList[i].segment[j] = { ...trackList[i].segment[j], ...segment }
-          setTrackList([...trackList]);
-          return;
-        }
-      }
-    }
-  }
-
-  function updateTrackActive(id: string, active: boolean) {
-    for (let i = 0; i < trackList.length; i++) {
-      trackList[i].active = false;
-      if (trackList[i].id === id) {
-        trackList[i].active = active;
-      }
-    }
-    setTrackList([...trackList]);
-  }
-
-  return {
-    trackList,
-    setTrackList,
-    getSegment,
-    updateSegment,
-    updateTrackActive
-  }
-}
-
 
 export function Timeline() {
   const { timelineState, updateTimelineState } = useTimelineState();
-  const { trackList, getSegment, updateSegment, updateTrackActive } = useTrackList([
+  const { trackList, getSegment, updateSegment, segmentToTrack, updateTrackActive } = useTrackList([
     {
       id: uuidv4(),
       active: false,
@@ -195,7 +84,7 @@ export function Timeline() {
       ]
     }
   ]);
-  /** 选中片段 id */
+  /** 选中片段 */
   const [selectSegment, setSelectSegment ] = useState<{ 
     id: string;
     drag: 'drag' | 'edge-front' | 'edge-rear' | '';
@@ -203,18 +92,37 @@ export function Timeline() {
     left: number;
     width: number;
    }>({ id: '', drag: '', top: 0, left: 0, width: 0 });
-   const updateSelectSegment = (segment: Partial<typeof selectSegment>) => {
+
+  const updateSelectSegment = (segment: Partial<typeof selectSegment>) => {
     setSelectSegment({ ...selectSegment, ...segment })
-   };
+  };
   // 滚动元素的 div
-  const ContentBody = useRef<HTMLDivElement>(null);
+  const $contentBody = useRef<HTMLDivElement>(null);
+  const $trackList = useRef<HTMLDivElement>(null);
+  // const $drag = useRef<HTMLDivElement>(null);
+
+  function init() {
+    const { secondWidth, totalTime } = timelineState
+    const contentWidth = secondWidth * totalTime;
+    
+    updateTimelineState({
+      contentWidth,
+      scrollWidth: contentWidth + LeftGap + RightHide
+    });
+
+    console.log($trackList.current?.children);
+  }
+
+  useEffect(() => {
+    init();
+  }, [])
 
   /**
    * 通过scrollLeft计算nowTime值
    * @param dire 方向
    */
   function scrollToTime(dire: -1 | 1): number {
-    timelineState.scrollLeft = ContentBody.current?.scrollLeft || 0;
+    timelineState.scrollLeft = $contentBody.current?.scrollLeft || 0;
     if (dire === 1) {
       // 右极限时间
       return (timelineState.scrollLeft - LeftGap + timelineState.visibleWidth) / timelineState.secondWidth;
@@ -247,10 +155,13 @@ export function Timeline() {
     mr: number;
     /** 是否有改变时间 */
     change: number;
-    box: BBox
+    dragTarget: string | 'new';
+    trackBBox: { id: string; rect: DOMRect }[];
+    dragBox: DOMRect;
   } = {
     id: '',
     action: 'drag',
+    dragTarget: '',
     start: 0,
     end: 0,
     dur: 0,
@@ -263,7 +174,8 @@ export function Timeline() {
     ml: 0,
     mr: 0,
     change: 0,
-    box: { x: 0, y: 0, w: 0, h: 0, cx: 0, cy: 0 }
+    dragBox: new DOMRect(0, 0),
+    trackBBox: []
   }
 
   function onSelectionDown(e: PointerEvent): void {
@@ -271,17 +183,22 @@ export function Timeline() {
     const action = dataset.action || '';
     const getSegments = getSegment(dataset.id || '');
 
-    if (action === '' || !getSegments) return;
+    if (action === '' || !getSegments || $trackList.current === null) return;
     
     const { segment, prev: prevS, next: nextS } = getSegments;
-    const segBox = ((e.target as HTMLDivElement).parentNode as HTMLDivElement).getBoundingClientRect();
+    const segRect = ((e.target as HTMLDivElement).parentNode as HTMLDivElement).getBoundingClientRect();
     updateSelectSegment({ id: dataset.id || '', drag: '' });
     updateTrackActive(dataset.trackid || '', true);
 
     sMpos.id = dataset.id || '';
     sMpos.action = action as 'drag' | 'edge-front' | 'edge-rear';
-    sMpos.point = [e.clientX, e.clientY - segBox.top]
-    sMpos.box = { x: segBox.x, y: segBox.y, w: segBox.width, h: segBox.height, cx: segBox.width / 2, cy: segBox.height / 2 };
+    sMpos.point = [e.clientX, e.clientY - segRect.top]
+    sMpos.dragBox = new DOMRect(0, 0, 1550, 22); // TODO: 暂时定死轴的宽高
+    sMpos.trackBBox = [...$trackList.current.children].map(el => ({
+      id: el.getAttribute('data-id') || '',
+      rect: el.getBoundingClientRect()
+    }));
+    
     sMpos.time = (e.pageX - timelineState.limitLeft) / timelineState.secondWidth + scrollToTime(-1);
     sMpos.start = segment.start;
     sMpos.end = segment.end;
@@ -310,6 +227,8 @@ export function Timeline() {
         break
       case 'edge-rear':
         {
+          console.log(nextS ? nextS.start : -1);
+          
           sMpos.eTime = segment.end;
           sMpos.ml = segment.start + Math.max(0.1, sMpos.midDur);
           sMpos.mr = nextS ? nextS.start : -1;
@@ -325,8 +244,10 @@ export function Timeline() {
   function onSelectionMove(e: PointerEvent) {
     e.preventDefault();
 
+    const { secondWidth, limitLeft, scrollLeft } = timelineState
     const x = e.clientX;
-    const time = scrollToTime(-1) + (e.pageX - timelineState.limitLeft) / timelineState.secondWidth;
+    const time = scrollToTime(-1) + (e.pageX - limitLeft) / secondWidth;
+    
     sMpos.change = x - sMpos.point[0];
 
     /** eTime 新的基准点 时间 */
@@ -343,13 +264,23 @@ export function Timeline() {
         {
           sMpos.start = eTime;
           sMpos.end = eTime + sMpos.dur;
+          const x = (limitLeft - scrollLeft) + (eTime * secondWidth),
+          y = e.clientY - sMpos.point[1];
           
+          sMpos.dragBox.x = x;
+          sMpos.dragBox.y = y;
+          for (let i = 0; i < sMpos.trackBBox.length; i++) {
+            let overlapRatio = calculateOverlapRatio(sMpos.dragBox, sMpos.trackBBox[i].rect);
+            overlapRatio = Math.floor((overlapRatio * 100));
+            // 判断元素是否出现重叠
+            if (overlapRatio >= 20) {
+              sMpos.dragTarget = sMpos.trackBBox[i].id;
+              updateTrackActive(sMpos.trackBBox[i].id, true);
+            }
+          }
+
           updateSelectSegment({ id: sMpos.id, drag: sMpos.action})
-          updateTimelineState({ dragTrackWrap: { 
-            active: true,
-            x: eTime * timelineState.secondWidth + timelineState.limitLeft,
-            y: e.clientY - sMpos.point[1]
-          } });
+          updateTimelineState({ dragTrackWrap: { active: true, x, y }});
         }
         break;
       case 'edge-front':
@@ -359,8 +290,8 @@ export function Timeline() {
           updateSelectSegment({ 
             id: sMpos.id,
             drag: sMpos.action,
-            left: sMpos.start * timelineState.secondWidth,
-            width: sMpos.dur * timelineState.secondWidth
+            left: sMpos.start * secondWidth,
+            width: sMpos.dur * secondWidth
           });
         }
         break;
@@ -373,8 +304,8 @@ export function Timeline() {
           updateSelectSegment({
             id: sMpos.id,
             drag: sMpos.action,
-            left: sMpos.start * timelineState.secondWidth,
-            width: dur * timelineState.secondWidth
+            left: sMpos.start * secondWidth,
+            width: dur * secondWidth
           });
         }
         break;
@@ -390,6 +321,7 @@ export function Timeline() {
       case 'drag':
         {
           updateSegment(sMpos.id, { start: sMpos.start, end: sMpos.end, dur: sMpos.end - sMpos.start });
+          segmentToTrack(sMpos.dragTarget, sMpos.id);
         }
         break;
       case 'edge-front':
@@ -405,29 +337,28 @@ export function Timeline() {
   }
 
   /**
- * 双指捏合缩放
- */
-function wheelEvent(e: SyntheticEvent) {
-  if ((e as unknown as WheelEvent).ctrlKey) {
-    // e.preventDefault();
-    console.log('wheelEvent');
-    
-  //   // let val = secondWidth.value - e.deltaY;
-  //   // val = val < 20 ? 20 : val > 340 ? 340 : val;
-  //   // secondWidth.value = Math.round(val);
+   * 双指捏合缩放
+   */
+  function wheelEvent(e: SyntheticEvent) {
+    if ((e as unknown as WheelEvent).ctrlKey) {
+      // e.preventDefault();
+      console.log('wheelEvent');
+      
+    //   // let val = secondWidth.value - e.deltaY;
+    //   // val = val < 20 ? 20 : val > 340 ? 340 : val;
+    //   // secondWidth.value = Math.round(val);
+    }
   }
-}
 
-/**
- * 滚动事件修改自定义滚动块
- * @param e e
- */
-function scrollEvent() {
-  console.log('scrollEvent');
-  // scrollLeft.value = ContentBody.value!.scrollLeft;
-  // handleXLeft.value =
-  //   (scrollLeft.value * visibleWidth.value) / scrollWidth.value;
-}
+  /**
+   * 滚动事件修改自定义滚动块
+   * @param e e
+   */
+  function scrollEvent() {
+    // console.log('scrollEvent', ContentBody.current?.scrollLeft);
+    updateTimelineState({ scrollLeft: $contentBody.current?.scrollLeft })
+    // handleXLeft.value = (scrollLeft.value * visibleWidth.value) / scrollWidth.value;
+  }
   
   return (
     <>
@@ -457,9 +388,9 @@ function scrollEvent() {
 
         </div>
 
-        <div className="timeline-bd" onScroll={ scrollEvent } onWheel={ wheelEvent }>
+        <div className="timeline-bd" ref={ $contentBody } onScroll={ scrollEvent } onWheel={ wheelEvent }>
 
-          <div className='content-scroll-body' ref={ ContentBody } style={{ width: '1524.1px' }}>
+          <div className='content-scroll-body' style={{ width: timelineState.scrollWidth }}>
 
             {/* --------------- 时间轴刻度 ----------- */}
             <TimelineAxios totalTimeInt={timelineState.totalTime} secondWidth={timelineState.secondWidth}/>
@@ -468,14 +399,19 @@ function scrollEvent() {
             <div className='track-wrapper' onPointerDown={ (e: SyntheticEvent) => onSelectionDown(e as unknown as PointerEvent) }>
 
               {/* --------------- 时间轴轨道列表----------- */}
-              <div className='track-list'>
+              <div className='track-list' ref={ $trackList }>
 
                 {
                   trackList.map((track, index) => {
                     return (
-                      <div className={ `track type-sticker ${ track.active ? 'selected' : '' }` } data-index={ index } data-id={ track.id } key={ track.id }>
+                      <div 
+                        className={ `track type-sticker ${ track.active ? 'selected' : '' }` } 
+                        data-index={ index }
+                        data-id={ track.id }
+                        key={ track.id }>
 
                         <div className="track-placeholder-wrapper"></div>
+
                         {
                           track.segment.map((s, i) => {
                             if (selectSegment.id === s.id && selectSegment.drag === 'drag') {
@@ -532,50 +468,3 @@ function scrollEvent() {
     </>
   )
 }
-
-const TimelineDragTrackComponent: React.FC<{
-  active: boolean,
-  x: number,
-  y: number,
-  children?: React.ReactNode 
-}> = (props) => {
-  const { active, x, y } = props;
-
-  return ReactDOM.createPortal(
-    (<div className='track-drag-container' style={{ display: active ? 'block' : 'none' , left: `${x}px`, top: `${y}px` }}>
-      { props.children }
-    </div>),
-    document.body
-  )
-}
-
-interface SegmentProps {
-  active: boolean;
-  track: TimeLineTrack
-  s: TimelineSegment;
-  i: number;
-  width: number;
-  left: number;
-}
-
-const SegmentComponent: React.FC<SegmentProps> = ({ active, s, i, left, width, track}) => (
-  <div className='segment type-sticker' data-id={ s.id } data-index={ i } style={{
-    left,
-    width
-  }}>
-    <div className="segment-rc-emitter" data-action="drag" data-id={ s.id } data-trackid={ track.id }>
-      <div className="segment-edge segment-edge-front cursor-segment-front" style={{ width: '2px' }}></div>
-      <div className="segment-edge segment-edge-rear cursor-segment-rear" style={{ width: '2px' }}></div>
-    </div>
-    <div className={ `segment-active-box ${ active ? 'active' : '' }` } style={{ left: '0px', right: '0px' }}>
-      <div className="segment-active-box-edge front cursor-segment-front" data-id={ s.id } data-action="edge-front"></div>
-      <div className="segment-active-box-edge rear cursor-segment-rear" data-id={ s.id } data-action="edge-rear"></div>
-    </div>
-    <div className="segment-hd">
-      <div className="segment-hd-group">
-        <img src={ s.source.url } className="segment-icon-image" draggable="false" />
-        <div className="segment-title">{ s.source.title }</div>
-      </div>
-    </div>
-  </div>
-);

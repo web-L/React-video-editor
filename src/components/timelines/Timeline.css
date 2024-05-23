@@ -67,7 +67,7 @@
 .axios-timelines {
   position: relative;
   left: 0;
-  top: 0;
+  top: -1px;
   width: max-content;
   display: flex;
   justify-content: flex-start;
