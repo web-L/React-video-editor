@@ -440,3 +440,43 @@
   background-color: var(--color-fill-2);
   border-color: var(--color-fill-2)
 }
+
+.coordinate-line {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+  z-index: 7
+}
+
+.coordinate-line.active {
+  display: block
+}
+
+.coordinate-line.style-vertical {
+  height: 100%;
+  top: 0;
+  width: 1px
+}
+
+.coordinate-line.style-horizontal {
+  height: 1px;
+  left: 0;
+  width: 100%
+}
+
+.coordinate-line.style-preview {
+  background-color: #b2902f
+}
+
+.coordinate-line.style-reference,.coordinate-line.style-track-space {
+  background-color: rgb(0,193,205)
+}
+
+.coordinate-line.style-reference {
+  transform: translateX(-175%)
+}
+
+.coordinate-line.style-track-space {
+  height: 1.5px;
+  transform: translateY(-50%)
+}

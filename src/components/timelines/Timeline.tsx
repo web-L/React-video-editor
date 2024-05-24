@@ -10,6 +10,8 @@ import { SegmentComponent } from './TimelineSegment';
 
 const Fix3 = (x: number) => Math.round(x * 1000) / 1000;
 const Fix1 = (x: number) => Math.round(x * 10) / 10;
+/** 盒子交叉比例 */
+const  OVERLAPRATIO = 20;
 
 /** 计算元素重叠率 */
 function calculateOverlapRatio(rect1: DOMRect, rect2: DOMRect) {
@@ -35,7 +37,7 @@ function calculateOverlapRatio(rect1: DOMRect, rect2: DOMRect) {
 
 export function Timeline() {
   const { timelineState, updateTimelineState } = useTimelineState();
-  const { trackList, getSegment, updateSegment, segmentToTrack, updateTrackActive } = useTrackList([
+  const { trackList, getSegment, updateSegment, segmentToTrack, insertTack, clearNoneSegmentTack, updateTrackActive } = useTrackList([
     {
       id: uuidv4(),
       active: false,
@@ -92,7 +94,9 @@ export function Timeline() {
     left: number;
     width: number;
    }>({ id: '', drag: '', top: 0, left: 0, width: 0 });
-
+  /** 拖拽横线 */
+  const [ dragHorizontalLine, setDragHorizontalLine ] = useState({ active: true, top: 0, left: 0 });
+// 
   const updateSelectSegment = (segment: Partial<typeof selectSegment>) => {
     setSelectSegment({ ...selectSegment, ...segment })
   };
@@ -145,6 +149,7 @@ export function Timeline() {
     midDur: number;
     /** 鼠标 down 下时 X,Y 位置 */
     point: [number, number];
+    downY: number;
     /** 鼠标 down 下时 场景页时长 */
     totalTime: number;
     /** 滚动条 滚动值 */
@@ -155,13 +160,17 @@ export function Timeline() {
     mr: number;
     /** 是否有改变时间 */
     change: number;
-    dragTarget: string | 'new';
-    trackBBox: { id: string; rect: DOMRect }[];
+    dragTarget: string | number;
+    dragTargetType: 'move' | 'new' | '';
+    dragTargetIndex: number;
+    trackBBox: { id: string; index: number; rect: DOMRect }[];
     dragBox: DOMRect;
   } = {
     id: '',
     action: 'drag',
     dragTarget: '',
+    dragTargetType: '',
+    dragTargetIndex: -1,
     start: 0,
     end: 0,
     dur: 0,
@@ -169,6 +178,7 @@ export function Timeline() {
     eTime: 0,
     midDur: 0.1,
     point: [0, 0],
+    downY: 0,
     totalTime: 0,
     scroll: 0,
     ml: 0,
@@ -192,12 +202,16 @@ export function Timeline() {
 
     sMpos.id = dataset.id || '';
     sMpos.action = action as 'drag' | 'edge-front' | 'edge-rear';
-    sMpos.point = [e.clientX, e.clientY - segRect.top]
+    sMpos.point = [e.clientX, e.clientY - segRect.top];
+    sMpos.downY = e.clientY;
     sMpos.dragBox = new DOMRect(0, 0, 1550, 22); // TODO: 暂时定死轴的宽高
-    sMpos.trackBBox = [...$trackList.current.children].map(el => ({
+    sMpos.trackBBox = [...$trackList.current.children].map((el, index) => ({
       id: el.getAttribute('data-id') || '',
+      index,
       rect: el.getBoundingClientRect()
     }));
+    sMpos.dragTargetType = '';
+    sMpos.dragTargetIndex = -1;
     
     sMpos.time = (e.pageX - timelineState.limitLeft) / timelineState.secondWidth + scrollToTime(-1);
     sMpos.start = segment.start;
@@ -269,18 +283,41 @@ export function Timeline() {
           
           sMpos.dragBox.x = x;
           sMpos.dragBox.y = y;
+
+          updateTimelineState({ dragTrackWrap: { active: true, x, y }});
+          updateSelectSegment({ id: sMpos.id, drag: sMpos.action});
+
           for (let i = 0; i < sMpos.trackBBox.length; i++) {
-            let overlapRatio = calculateOverlapRatio(sMpos.dragBox, sMpos.trackBBox[i].rect);
-            overlapRatio = Math.floor((overlapRatio * 100));
+            const overlapRatio =  Math.floor(calculateOverlapRatio(sMpos.dragBox, sMpos.trackBBox[i].rect) * 100);
+            
             // 判断元素是否出现重叠
-            if (overlapRatio >= 20) {
+            if (overlapRatio >= OVERLAPRATIO) {
               sMpos.dragTarget = sMpos.trackBBox[i].id;
+              sMpos.dragTargetIndex = sMpos.trackBBox[i].index;
+              sMpos.dragTargetType = 'move';
               updateTrackActive(sMpos.trackBBox[i].id, true);
+              break;
             }
           }
 
-          updateSelectSegment({ id: sMpos.id, drag: sMpos.action})
-          updateTimelineState({ dragTrackWrap: { active: true, x, y }});
+          const { id, rect, index } =  sMpos.trackBBox[sMpos.dragTargetIndex];
+          const overlapRatio = Math.floor(calculateOverlapRatio(sMpos.dragBox, rect) * 100 );
+          if (overlapRatio < OVERLAPRATIO) {
+            
+            if (sMpos.dragBox.y < rect.y) {
+              sMpos.dragTarget = index;
+              sMpos.dragTargetType = 'new';
+              updateTrackActive(id, false);
+              break;
+            }
+            if ((sMpos.dragBox.y + 22) > (rect.y + rect.height)){
+              console.log(index, 'bottom');
+              sMpos.dragTarget = (index + 1);
+              sMpos.dragTargetType = 'new';
+              updateTrackActive(id, false);
+              break;
+            }
+          }
         }
         break;
       case 'edge-front':
@@ -321,7 +358,14 @@ export function Timeline() {
       case 'drag':
         {
           updateSegment(sMpos.id, { start: sMpos.start, end: sMpos.end, dur: sMpos.end - sMpos.start });
-          segmentToTrack(sMpos.dragTarget, sMpos.id);
+          if (sMpos.dragTargetType  === 'move') {
+            segmentToTrack(sMpos.dragTarget as string, sMpos.id);
+            clearNoneSegmentTack();
+          }
+          if (sMpos.dragTargetType  === 'new') {
+            insertTack(sMpos.dragTarget as number, sMpos.id);
+            clearNoneSegmentTack();
+          }
         }
         break;
       case 'edge-front':
@@ -460,6 +504,8 @@ export function Timeline() {
               </div>
               
             </div>
+
+            <div className={ `coordinate-line style-horizontal style-track-space ${ dragHorizontalLine.active ? 'active' : ''  }` } style={{ top: dragHorizontalLine.top, left: dragHorizontalLine.left }}></div>
           </div>
 
         </div>

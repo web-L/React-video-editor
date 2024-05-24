@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { TimeLineTrack, TimelineSegment } from './type'
+import { v4 as uuidv4 } from 'uuid';
 
 // 左则头
 export const LeftWidth = 80;
@@ -106,6 +107,40 @@ export const useTrackList = (track: TimeLineTrack[] = []) => {
     }
   }
 
+  function insertTack(index: number, segment: TimelineSegment | string) {
+    let s: TimelineSegment | undefined;
+    if (typeof segment === 'string') {
+      for (let i = 0; i < trackList.length; i++) {
+        for (let j = 0; j < trackList[i].segment.length; j++) {
+          if (trackList[i].segment[j].id === segment) {
+            s = trackList[i].segment.splice(j, 1)[0];
+          }
+        }
+      }
+    } else {
+      s = segment;
+    }
+    
+    if (!s) return;
+
+    trackList.splice(index, 0, {
+      id: uuidv4(),
+      active: true,
+      type: s.type,
+      segment: [ s ]
+    });
+    setTrackList([...trackList]);
+  }
+
+  function clearNoneSegmentTack() {
+    for (let i = 0; i < trackList.length; i++) {
+      if (trackList[i].segment.length < 1) {
+        trackList.splice(i, 1);
+        setTrackList([...trackList]);
+      }
+    }
+  }
+
   function updateTrackActive(id: string, active: boolean) {
     for (let i = 0; i < trackList.length; i++) {
       trackList[i].active = false;
@@ -122,6 +157,8 @@ export const useTrackList = (track: TimeLineTrack[] = []) => {
     getSegment,
     updateSegment,
     updateTrackActive,
-    segmentToTrack
+    segmentToTrack,
+    insertTack,
+    clearNoneSegmentTack
   }
 }
